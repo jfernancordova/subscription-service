@@ -37,12 +37,8 @@ Follow these steps to get the Subscription Service up and running on your local 
    ```bash
    cd subscription-service
 
-3. Install the required dependencies:
-    ```bash
-   go mod tidy
-   
-4. Run the application:
+3. Run the application:
    ```bash
-   go run main.go
+   make start
 
-5. Access the service locally by opening a web browser and visiting http://localhost:8080.
+4. Access the service locally by opening a web browser and visiting http://localhost:8080.
