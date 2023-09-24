@@ -6,7 +6,6 @@ REDIS="127.0.0.1:6379"
 up:
 	@echo "docker compose up..."
 	docker-compose up -d
-	sleep 5
 	@echo "containers up!"
 
 ## build: Build binary
