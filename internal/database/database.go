@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// InitDB gets a connection to the database.
-func InitDB() *sql.DB {
+// Init gets a connection to the database.
+func Init() *sql.DB {
 	conn := connectDB()
 	if conn == nil {
 		log.Panic("can't connect to the database")
