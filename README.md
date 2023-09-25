@@ -41,4 +41,4 @@ Follow these steps to get the Subscription Service up and running on your local 
    ```bash
    make start
 
-4. Access the service locally by opening a web browser and visiting http://localhost:8080.
+4. Access the service locally by opening a web browser and visiting http://localhost.

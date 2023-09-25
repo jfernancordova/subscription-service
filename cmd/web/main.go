@@ -26,21 +26,13 @@ func init() {
 }
 
 func main() {
-
-	// loggers
-	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
-	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
-
-	// waitgroup
 	wg := sync.WaitGroup{}
-
-	// set up the application config
 	app := config{
-		Session:  session,
-		DB:       db,
-		InfoLog:  infoLog,
-		ErrorLog: errorLog,
-		Wait:     &wg,
+		session:  session,
+		db:       db,
+		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
+		errorLog: log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
+		wait:     &wg,
 	}
 
 	// set up mail
@@ -55,8 +47,7 @@ func (app *config) serve() {
 		Addr:    fmt.Sprintf(":%s", "80"),
 		Handler: app.routes(),
 	}
-
-	app.InfoLog.Println("Starting web server...")
+	app.infoLog.Println("Starting web server...")
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Panic(err)

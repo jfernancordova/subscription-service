@@ -9,9 +9,9 @@ import (
 )
 
 type config struct {
-	Session  *scs.SessionManager
-	DB       *sql.DB
-	InfoLog  *log.Logger
-	ErrorLog *log.Logger
-	Wait     *sync.WaitGroup
+	session  *scs.SessionManager
+	db       *sql.DB
+	infoLog  *log.Logger
+	errorLog *log.Logger
+	wait     *sync.WaitGroup
 }

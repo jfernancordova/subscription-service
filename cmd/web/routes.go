@@ -8,14 +8,22 @@ import (
 )
 
 func (app *config) routes() http.Handler {
-	// create router
 	mux := chi.NewRouter()
 
-	// set up middleware
 	mux.Use(middleware.Recoverer)
+	mux.Use(app.sessionLoad)
 
-	// define application routes
-	mux.Get("/", app.HomePage)
+	mux.Get("/", app.home)
+
+	mux.Get("/login", app.login)
+	mux.Post("/login", app.postLogin)
+
+	mux.Get("/logout", app.logout)
+
+	mux.Get("/register", app.register)
+	mux.Post("/register", app.postRegister)
+
+	mux.Post("/activate-account", app.activateAccount)
 
 	return mux
 }
