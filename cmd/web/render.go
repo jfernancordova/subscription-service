@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-var pathToTemplates = "./cmd/web/templates"
+const pathToTemplates = "./cmd/web/templates"
 
 // TemplateData is the placeholder to render the Data.
 type TemplateData struct {

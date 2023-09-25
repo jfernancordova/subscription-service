@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 
 	"github.com/alexedwards/scs/v2"
 	_ "github.com/jackc/pgconn"
@@ -35,9 +37,8 @@ func main() {
 		wait:     &wg,
 	}
 
-	// set up mail
+	go app.listenShutdown()
 
-	// listen for web connections
 	app.serve()
 }
 
@@ -52,4 +53,22 @@ func (app *config) serve() {
 	if err != nil {
 		log.Panic(err)
 	}
+}
+
+func (app *config) listenShutdown() {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	app.shutdown()
+	os.Exit(0)
+}
+
+func (app *config) shutdown() {
+	// perform any cleanup task
+	app.infoLog.Println("run cleanup task...")
+
+	// block until waitgroup is empty
+	app.wait.Wait()
+
+	app.infoLog.Println("closing channels and shutting down application...")
 }
