@@ -10,7 +10,7 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
-      POSTGRES_DB: concurrency
+      POSTGRES_DB: subscription-service
     volumes:
       - ./db-data/postgres/:/var/lib/postgresql/data/
 

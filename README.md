@@ -42,3 +42,7 @@ Follow these steps to get the Subscription Service up and running on your local 
    make start
 
 4. Access the service locally by opening a web browser and visiting http://localhost.
+
+5. To populate data to the database:
+   ```bash
+   make load

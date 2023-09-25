@@ -1,5 +1,5 @@
 BINARY_NAME=subscription-service
-DSN="host=localhost port=5432 user=postgres password=password dbname=concurrency sslmode=disable timezone=UTC connect_timeout=5"
+DSN="host=localhost port=5432 user=postgres password=password dbname=subscription-service sslmode=disable timezone=UTC connect_timeout=5"
 REDIS="127.0.0.1:6379"
 
 ## up: up service containers
@@ -43,3 +43,7 @@ restart: stop start
 ## test: runs all tests
 test:
 	go test -v ./...
+
+## load: populate data to the database
+load:
+	docker-compose exec -T postgres psql -U postgres subscription-service < scripts/db.sql
