@@ -46,3 +46,8 @@ Follow these steps to get the Subscription Service up and running on your local 
 5. To populate data to the database:
    ```bash
    make load
+
+6. To access:
+   ```bash
+   email: admin@example.com
+   password: verysecret

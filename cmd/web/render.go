@@ -7,9 +7,9 @@ import (
 	"time"
 )
 
-const pathToTemplates = "./cmd/web/templates"
+var pathToTemplates = "./cmd/web/templates"
 
-// TemplateData is the placeholder to render the Data.
+// TemplateData holds data sent from handlers to templates
 type TemplateData struct {
 	StringMap     map[string]string
 	IntMap        map[string]int
@@ -20,10 +20,10 @@ type TemplateData struct {
 	Error         string
 	Authenticated bool
 	Now           time.Time
-	// user *Data.user
+	// User *data.User
 }
 
-func (app *config) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
+func (app *Config) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
 	partials := []string{
 		fmt.Sprintf("%s/base.layout.gohtml", pathToTemplates),
 		fmt.Sprintf("%s/header.partial.gohtml", pathToTemplates),
@@ -45,31 +45,33 @@ func (app *config) render(w http.ResponseWriter, r *http.Request, t string, td *
 
 	tmpl, err := template.ParseFiles(templateSlice...)
 	if err != nil {
-		app.errorLog.Println(err)
+		app.ErrorLog.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if err := tmpl.Execute(w, app.addDefaultData(td, r)); err != nil {
-		app.errorLog.Println(err)
+	if err := tmpl.Execute(w, app.AddDefaultData(td, r)); err != nil {
+		app.ErrorLog.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
-func (app *config) addDefaultData(td *TemplateData, r *http.Request) *TemplateData {
-	td.Flash = app.session.PopString(r.Context(), "Flash")
-	td.Warning = app.session.PopString(r.Context(), "Warning")
-	td.Error = app.session.PopString(r.Context(), "Error")
-	td.Now = time.Now()
-
-	if app.isAuthenticated(r) {
+// AddDefaultData adds default data to the template data
+func (app *Config) AddDefaultData(td *TemplateData, r *http.Request) *TemplateData {
+	td.Flash = app.Session.PopString(r.Context(), "flash")
+	td.Warning = app.Session.PopString(r.Context(), "warning")
+	td.Error = app.Session.PopString(r.Context(), "error")
+	if app.IsAuthenticated(r) {
 		td.Authenticated = true
+		// TODO - get more user information
 	}
+	td.Now = time.Now()
 
 	return td
 }
 
-func (app *config) isAuthenticated(r *http.Request) bool {
-	return app.session.Exists(r.Context(), "userID")
+// IsAuthenticated checks if the user is logged in
+func (app *Config) IsAuthenticated(r *http.Request) bool {
+	return app.Session.Exists(r.Context(), "userID")
 }

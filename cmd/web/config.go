@@ -2,16 +2,19 @@ package main
 
 import (
 	"database/sql"
+	"subscription-service/data"
 	"log"
 	"sync"
 
 	"github.com/alexedwards/scs/v2"
 )
 
-type config struct {
-	session  *scs.SessionManager
-	db       *sql.DB
-	infoLog  *log.Logger
-	errorLog *log.Logger
-	wait     *sync.WaitGroup
+// Config holds application configuration
+type Config struct {
+	Session  *scs.SessionManager
+	DB       *sql.DB
+	InfoLog  *log.Logger
+	ErrorLog *log.Logger
+	Wait     *sync.WaitGroup
+	Models   data.Models
 }

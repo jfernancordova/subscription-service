@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"encoding/gob"
+	"subscription-service/data"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,53 +11,143 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/alexedwards/scs/redisstore"
 	"github.com/alexedwards/scs/v2"
+	"github.com/gomodule/redigo/redis"
 	_ "github.com/jackc/pgconn"
 	_ "github.com/jackc/pgx/v4"
 	_ "github.com/jackc/pgx/v4/stdlib"
-
-	"subscription-service/internal/database"
-	s "subscription-service/internal/session"
 )
 
-var db *sql.DB
-var session *scs.SessionManager
-
-func init() {
-	db = database.Init()
-	session = s.Init()
-}
-
 func main() {
+	// connect to the database
+	db := initDB()
+
+	// create sessions
+	session := initSession()
+
+	// create loggers
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+
+	// create waitgroup
 	wg := sync.WaitGroup{}
-	app := config{
-		session:  session,
-		db:       db,
-		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
-		errorLog: log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile),
-		wait:     &wg,
+
+	// set up the application config
+	app := Config{
+		Session:  session,
+		DB:       db,
+		InfoLog:  infoLog,
+		ErrorLog: errorLog,
+		Wait:     &wg,
+		Models:   data.New(db),
 	}
 
-	go app.listenShutdown()
+	// listen for signals
+	go app.listenForShutdown()
 
+	// listen for web connections
 	app.serve()
 }
 
-func (app *config) serve() {
+func (app *Config) serve() {
 	// start http server
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", "80"),
 		Handler: app.routes(),
 	}
-	app.infoLog.Println("Starting web server...")
+
+	app.InfoLog.Println("Starting web server...")
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Panic(err)
 	}
 }
 
-func (app *config) listenShutdown() {
+// initDB connects to Postgres and returns a pool of connections
+func initDB() *sql.DB {
+	conn := connectToDB()
+	if conn == nil {
+		log.Panic("can't connect to database")
+	}
+	return conn
+}
+
+// connectToDB tries to connect to postgres, and backs off until a connection
+// is made, or we have not connected after 10 tries
+func connectToDB() *sql.DB {
+	counts := 0
+
+	dsn := os.Getenv("DSN")
+
+	for {
+		connection, err := openDB(dsn)
+		if err != nil {
+			log.Println("postgres not yet ready...")
+		} else {
+			log.Print("connected to database!")
+			return connection
+		}
+
+		if counts > 10 {
+			return nil
+		}
+
+		log.Print("Backing off for 1 second")
+		time.Sleep(1 * time.Second)
+		counts++
+
+		continue
+	}
+}
+
+// openDB opens a connection to Postgres, using a DSN read
+// from the environment variable DSN
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("pgx", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
+
+// initSession sets up a session, using Redis for session store
+func initSession() *scs.SessionManager {
+	gob.Register(data.User{})
+	
+	// set up session
+	session := scs.New()
+	session.Store = redisstore.New(initRedis())
+	session.Lifetime = 24 * time.Hour
+	session.Cookie.Persist = true
+	session.Cookie.SameSite = http.SameSiteLaxMode
+	session.Cookie.Secure = true
+
+	return session
+}
+
+// initRedis returns a pool of connections to Redis using the
+// environment variable REDIS
+func initRedis() *redis.Pool {
+	redisPool := &redis.Pool{
+		MaxIdle: 10,
+		Dial: func() (redis.Conn, error) {
+			return redis.Dial("tcp", os.Getenv("REDIS"))
+		},
+	}
+
+	return redisPool
+}
+
+func (app *Config) listenForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -63,12 +155,12 @@ func (app *config) listenShutdown() {
 	os.Exit(0)
 }
 
-func (app *config) shutdown() {
-	// perform any cleanup task
-	app.infoLog.Println("run cleanup task...")
+func (app *Config) shutdown() {
+	// perform any cleanup tasks
+	app.InfoLog.Println("would run cleanup tasks...")
 
 	// block until waitgroup is empty
-	app.wait.Wait()
+	app.Wait.Wait()
 
-	app.infoLog.Println("closing channels and shutting down application...")
+	app.InfoLog.Println("closing channels and shutting down application...")
 }
