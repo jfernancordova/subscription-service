@@ -3,32 +3,32 @@ package main
 import "net/http"
 
 // HomePage displays the home page
-func (app *Config) HomePage(w http.ResponseWriter, r *http.Request) {
+func (app *config) HomePage(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "home.page.gohtml", nil)
 }
 
 // LoginPage displays the login page
-func (app *Config) LoginPage(w http.ResponseWriter, r *http.Request) {
+func (app *config) LoginPage(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "login.page.gohtml", nil)
 }
 
 // PostLoginPage handles the login form submission
-func (app *Config) PostLoginPage(w http.ResponseWriter, r *http.Request) {
-	_ = app.Session.RenewToken(r.Context())
+func (app *config) PostLoginPage(w http.ResponseWriter, r *http.Request) {
+	_ = app.session.RenewToken(r.Context())
 
 	// parse form post
 	err := r.ParseForm()
 	if err != nil {
-		app.ErrorLog.Println(err)
+		app.errorLog.Println(err)
 	}
 
 	// get email and password from form post
 	email := r.Form.Get("email")
 	password := r.Form.Get("password")
 
-	user, err := app.Models.User.GetByEmail(email)
+	user, err := app.models.User.GetByEmail(email)
 	if err != nil {
-		app.Session.Put(r.Context(), "error", "Invalid credentials.")
+		app.session.Put(r.Context(), "error", "Invalid credentials.")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
@@ -36,43 +36,43 @@ func (app *Config) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 	// check password
 	validPassword, err := user.PasswordMatches(password)
 	if err != nil {
-		app.Session.Put(r.Context(), "error", "Invalid credentials.")
+		app.session.Put(r.Context(), "error", "Invalid credentials.")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	if !validPassword{
-		app.Session.Put(r.Context(), "error", "Invalid credentials.")
+	if !validPassword {
+		app.session.Put(r.Context(), "error", "Invalid credentials.")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
 	// add user to session
-	app.Session.Put(r.Context(), "userID", user.ID)
-	app.Session.Put(r.Context(), "user", user)
+	app.session.Put(r.Context(), "userID", user.ID)
+	app.session.Put(r.Context(), "user", user)
 
-	app.Session.Put(r.Context(), "flash", "Successful login!")
+	app.session.Put(r.Context(), "flash", "Successful login!")
 
 	// redirect the user
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // Logout logs the user out
-func (app *Config) Logout(w http.ResponseWriter, r *http.Request) {
+func (app *config) Logout(w http.ResponseWriter, r *http.Request) {
 	// clean up session
-	_ = app.Session.Destroy(r.Context())
-	_ = app.Session.RenewToken(r.Context())
+	_ = app.session.Destroy(r.Context())
+	_ = app.session.RenewToken(r.Context())
 
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 // RegisterPage displays the register page
-func (app *Config) RegisterPage(w http.ResponseWriter, r *http.Request) {
+func (app *config) RegisterPage(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "register.page.gohtml", nil)
 }
 
 // PostRegisterPage handles the register form submission
-func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
+func (app *config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 	// create a user
 
 	// send an activation email
@@ -81,8 +81,8 @@ func (app *Config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 }
 
 // ActivateAccount activates a user's account
-func (app *Config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
-	// validate url 
+func (app *config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
+	// validate url
 
 	// generate an invoice
 

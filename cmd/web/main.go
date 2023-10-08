@@ -3,12 +3,12 @@ package main
 import (
 	"database/sql"
 	"encoding/gob"
-	"subscription-service/data"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"subscription-service/data"
 	"sync"
 	"syscall"
 	"time"
@@ -36,13 +36,13 @@ func main() {
 	wg := sync.WaitGroup{}
 
 	// set up the application config
-	app := Config{
-		Session:  session,
-		DB:       db,
-		InfoLog:  infoLog,
-		ErrorLog: errorLog,
-		Wait:     &wg,
-		Models:   data.New(db),
+	app := config{
+		session:  session,
+		db:       db,
+		infoLog:  infoLog,
+		errorLog: errorLog,
+		wait:     &wg,
+		models:   data.New(db),
 	}
 
 	// listen for signals
@@ -52,14 +52,14 @@ func main() {
 	app.serve()
 }
 
-func (app *Config) serve() {
+func (app *config) serve() {
 	// start http server
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", "80"),
 		Handler: app.routes(),
 	}
 
-	app.InfoLog.Println("Starting web server...")
+	app.infoLog.Println("Starting web server...")
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Panic(err)
@@ -122,7 +122,7 @@ func openDB(dsn string) (*sql.DB, error) {
 // initSession sets up a session, using Redis for session store
 func initSession() *scs.SessionManager {
 	gob.Register(data.User{})
-	
+
 	// set up session
 	session := scs.New()
 	session.Store = redisstore.New(initRedis())
@@ -147,7 +147,7 @@ func initRedis() *redis.Pool {
 	return redisPool
 }
 
-func (app *Config) listenForShutdown() {
+func (app *config) listenForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -155,12 +155,12 @@ func (app *Config) listenForShutdown() {
 	os.Exit(0)
 }
 
-func (app *Config) shutdown() {
+func (app *config) shutdown() {
 	// perform any cleanup tasks
-	app.InfoLog.Println("would run cleanup tasks...")
+	app.infoLog.Println("would run cleanup tasks...")
 
 	// block until waitgroup is empty
-	app.Wait.Wait()
+	app.wait.Wait()
 
-	app.InfoLog.Println("closing channels and shutting down application...")
+	app.infoLog.Println("closing channels and shutting down application...")
 }
