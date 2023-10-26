@@ -41,6 +41,10 @@ func main() {
 		models:   data.New(db),
 	}
 
+	// set up mail
+	app.mailer = app.createMail()
+	go app.listenForMail()
+
 	// listen for signals
 	go app.listenForShutdown()
 
@@ -77,5 +81,31 @@ func (app *config) shutdown() {
 	// block until waitgroup is empty
 	app.wait.Wait()
 
+	app.mailer.DoneChan <- true
+	close(app.mailer.MailerChan)
+	close(app.mailer.ErrorChan)
+	close(app.mailer.DoneChan)
+
 	app.infoLog.Println("closing channels and shutting down application...")
+}
+
+func (app *config) createMail() Mail {
+	errorChan := make(chan error)
+	mailerChan := make(chan Message, 100)
+	mailerDoneChan := make(chan bool)
+
+	m := Mail{
+		Domain:     "localhost",
+		Host:       "localhost",
+		Port:       1025,
+		Encryption: "none",
+		FromName:   "Subscription Service",
+		FromAddress: "info@jfernancordova.com",
+		Wait:       app.wait,
+		ErrorChan:  errorChan,
+		MailerChan: mailerChan,
+		DoneChan:   mailerDoneChan,
+	}
+
+	return m
 }

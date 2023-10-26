@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"subscription-service/data"
 	"time"
 )
 
@@ -20,7 +21,7 @@ type TemplateData struct {
 	Error         string
 	Authenticated bool
 	Now           time.Time
-	// User *data.User
+	User          *data.User
 }
 
 func (app *config) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
@@ -35,7 +36,10 @@ func (app *config) render(w http.ResponseWriter, r *http.Request, t string, td *
 	var templateSlice []string
 	templateSlice = append(templateSlice, fmt.Sprintf("%s/%s", pathToTemplates, t))
 
-	templateSlice = append(templateSlice, partials...)
+	for _, x := range partials {
+		templateSlice = append(templateSlice, x)
+	}
+
 	if td == nil {
 		td = &TemplateData{}
 	}
@@ -61,7 +65,13 @@ func (app *config) AddDefaultData(td *TemplateData, r *http.Request) *TemplateDa
 	td.Error = app.session.PopString(r.Context(), "error")
 	if app.IsAuthenticated(r) {
 		td.Authenticated = true
-		// TODO - get more user information
+		user, ok := app.session.Get(r.Context(), "user").(data.User)
+		if !ok {
+			app.errorLog.Println("can't get user from session")
+		} else {
+			app.infoLog.Println("user recovered from session")
+			td.User = &user
+		}
 	}
 	td.Now = time.Now()
 

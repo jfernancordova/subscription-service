@@ -11,6 +11,7 @@ import (
 	mail "github.com/xhit/go-simple-mail/v2"
 )
 
+// Mail holds mail configuration
 type Mail struct {
 	Domain      string
 	Host        string
@@ -26,6 +27,7 @@ type Mail struct {
 	DoneChan    chan bool
 }
 
+// Message holds mail message data
 type Message struct {
 	From        string
 	FromName    string
@@ -37,9 +39,22 @@ type Message struct {
 	Template    string
 }
 
-// a function to listen for messages on the MailerChan
+func (app *config) listenForMail() {
+	for {
+		select {
+		case msg := <-app.mailer.MailerChan:
+			go app.mailer.sendMail(msg, app.mailer.ErrorChan)
+		case err := <-app.mailer.ErrorChan:
+			app.errorLog.Println(err)
+		case <-app.mailer.DoneChan:
+			return
+		}
+	}
+}
 
 func (m *Mail) sendMail(msg Message, errorChan chan error) {
+	defer m.Wait.Done()
+
 	if msg.Template == "" {
 		msg.Template = "mail"
 	}
