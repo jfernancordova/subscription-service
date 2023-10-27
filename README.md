@@ -51,3 +51,5 @@ Follow these steps to get the Subscription Service up and running on your local 
    ```bash
    email: admin@example.com
    password: verysecret
+
+7. To see the mailhog local mails: http://localhost:8025
