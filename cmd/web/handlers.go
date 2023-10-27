@@ -120,7 +120,7 @@ func (app *config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 		Data:     template.HTML(signedURL),
 	}
 	app.sendEmail(msg)
-	
+
 	app.session.Put(r.Context(), "flash", "Your account has been created! Please check your email to activate your account.")
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
@@ -128,12 +128,32 @@ func (app *config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 // ActivateAccount activates a user's account
 func (app *config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 	// validate url
+	url := r.RequestURI
+	testURL := fmt.Sprintf("http://localhost%s", url)
+	okay := VerifyToken(testURL)
 
-	// generate an invoice
+	if !okay {
+		app.session.Put(r.Context(), "error", "Invalid activation link.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
 
-	// send an email with attachments
+	// activate account
+	u, err := app.models.User.GetByEmail(r.URL.Query().Get("email"))
+	if err != nil {
+		app.session.Put(r.Context(), "error", "No user found.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
 
-	// send an email with the invoice attached
+	u.Active = 1
+	err = u.Update()
+	if err != nil {
+		app.session.Put(r.Context(), "error", "Unable to update user.")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
 
-	// subscbribe the user to an account
+	app.session.Put(r.Context(), "flash", "Your account has been activated! Please log in.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
