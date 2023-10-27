@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strconv"
 	"subscription-service/data"
 )
 
@@ -161,15 +162,48 @@ func (app *config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *config) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
-}
+	id := r.URL.Query().Get("id")
 
-func (app *config) ChooseSubscription(w http.ResponseWriter, r *http.Request) {
-	if !app.session.Exists(r.Context(), "userID") {
-		app.session.Put(r.Context(), "flash", "You must be logged in to view this page.")
+	planID, _ := strconv.Atoi(id)
+
+	plan, err := app.models.Plan.GetOne(planID)
+	if err != nil {
+		app.session.Put(r.Context(), "error", "Unable to find plan.")
+		http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
+		return
+	}
+
+	user, ok := app.session.Get(r.Context(), "user").(data.User)
+	if !ok {
+		app.session.Put(r.Context(), "error", "Log in first.")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
+	app.wait.Add(1)
+	go func() {
+		defer app.wait.Done()
+		invoice, err := app.Invoice(user, plan)
+		if err != nil {
+			app.errorChan <- err
+		}
+
+		msg := Message{
+			To:       user.Email,
+			Subject:  "Your Invoice",
+			Data:     invoice,
+			Template: "invoice",
+		}
+		app.sendEmail(msg)
+	}()
+
+}
+
+func (app *config) Invoice(u data.User, plan *data.Plan) (string, error) {
+	return plan.PlanAmountFormatted, nil
+}
+
+func (app *config) ChooseSubscription(w http.ResponseWriter, r *http.Request) {
 	plans, err := app.models.Plan.GetAll()
 	if err != nil {
 		app.errorLog.Println(err)

@@ -33,12 +33,14 @@ func main() {
 
 	// set up the application config
 	app := config{
-		session:  session,
-		db:       db,
-		infoLog:  infoLog,
-		errorLog: errorLog,
-		wait:     &wg,
-		models:   data.New(db),
+		session:       session,
+		db:            db,
+		infoLog:       infoLog,
+		errorLog:      errorLog,
+		wait:          &wg,
+		models:        data.New(db),
+		errorChan:     make(chan error),
+		errorChanDone: make(chan bool),
 	}
 
 	// set up mail
@@ -48,8 +50,22 @@ func main() {
 	// listen for signals
 	go app.listenForShutdown()
 
+	// listen for errors
+	go app.listenForErrors()
+
 	// listen for web connections
 	app.serve()
+}
+
+func (app *config) listenForErrors() {
+	for {
+		select {
+		case err := <-app.errorChan:
+			app.errorLog.Println(err)
+		case <-app.errorChanDone:
+			return
+		}
+	}
 }
 
 func (app *config) serve() {
@@ -82,9 +98,14 @@ func (app *config) shutdown() {
 	app.wait.Wait()
 
 	app.mailer.DoneChan <- true
+	app.errorChanDone <- true
+
 	close(app.mailer.MailerChan)
 	close(app.mailer.ErrorChan)
 	close(app.mailer.DoneChan)
+
+	close(app.errorChan)
+	close(app.errorChanDone)
 
 	app.infoLog.Println("closing channels and shutting down application...")
 }
@@ -95,16 +116,16 @@ func (app *config) createMail() Mail {
 	mailerDoneChan := make(chan bool)
 
 	m := Mail{
-		Domain:     "localhost",
-		Host:       "localhost",
-		Port:       1025,
-		Encryption: "none",
-		FromName:   "Subscription Service",
+		Domain:      "localhost",
+		Host:        "localhost",
+		Port:        1025,
+		Encryption:  "none",
+		FromName:    "Subscription Service",
 		FromAddress: "info@jfernancordova.com",
-		Wait:       app.wait,
-		ErrorChan:  errorChan,
-		MailerChan: mailerChan,
-		DoneChan:   mailerDoneChan,
+		Wait:        app.wait,
+		ErrorChan:   errorChan,
+		MailerChan:  mailerChan,
+		DoneChan:    mailerDoneChan,
 	}
 
 	return m

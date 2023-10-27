@@ -11,10 +11,10 @@ Provides a flexible and scalable subscription management system for your busines
 ### Features
 
 - User registration and authentication.
-- Subscription plan creation and management.
-- Subscription billing and payment processing.
-- Subscription status tracking and management.
-- Email notifications for billing events and subscription updates.
+- Subscription plans.
+- Email notifications.
+- Invoices management.
+- User manuals.
 
 ### Prerequisites
 

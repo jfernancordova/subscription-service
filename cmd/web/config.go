@@ -11,11 +11,13 @@ import (
 
 // config holds application configuration
 type config struct {
-	session  *scs.SessionManager
-	db       *sql.DB
-	infoLog  *log.Logger
-	errorLog *log.Logger
-	wait     *sync.WaitGroup
-	models   data.Models
-	mailer   Mail
+	session       *scs.SessionManager
+	db            *sql.DB
+	infoLog       *log.Logger
+	errorLog      *log.Logger
+	wait          *sync.WaitGroup
+	models        data.Models
+	mailer        Mail
+	errorChan     chan error
+	errorChanDone chan bool
 }
