@@ -9,19 +9,21 @@ import (
 
 // Plan is the type for subscription plans
 type Plan struct {
-	ID         int
-	PlanName   string
-	PlanAmount int
-	CreatedAt  time.Time
-	UpdatedAt  time.Time
+	ID                  int
+	PlanName            string
+	PlanAmount          int
+	PlanAmountFormatted string
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
 }
 
+// GetAll returns all plans
 func (p *Plan) GetAll() ([]*Plan, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	query := `select id, plan_name, plan_amount created_at, updated_at
-	from plans order by plan_name`
+	query := `select id, plan_name, plan_amount, created_at, updated_at
+	from plans order by id`
 
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
@@ -40,6 +42,8 @@ func (p *Plan) GetAll() ([]*Plan, error) {
 			&plan.CreatedAt,
 			&plan.UpdatedAt,
 		)
+
+		plan.PlanAmountFormatted = plan.AmountForDisplay()
 		if err != nil {
 			log.Println("Error scanning", err)
 			return nil, err
@@ -82,10 +86,18 @@ func (p *Plan) SubscribeUserToPlan(user User, plan Plan) error {
 	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
 	defer cancel()
 
-	stmt := `insert into user_plans (user_id, plan_id, created_at, updated_at)
+	// delete existing plan, if any
+	stmt := `delete from user_plans where user_id = $1`
+	_, err := db.ExecContext(ctx, stmt, user.ID)
+	if err != nil {
+		return err
+	}
+
+	// subscribe to new plan
+	stmt = `insert into user_plans (user_id, plan_id, created_at, updated_at)
 			values ($1, $2, $3, $4)`
 
-	_, err := db.ExecContext(ctx, stmt, user.ID, plan.ID, time.Now(), time.Now())
+	_, err = db.ExecContext(ctx, stmt, user.ID, plan.ID, time.Now(), time.Now())
 	if err != nil {
 		return err
 	}

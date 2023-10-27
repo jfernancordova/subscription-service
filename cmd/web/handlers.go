@@ -91,6 +91,8 @@ func (app *config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Println(err)
 	}
 
+	// TODO - validate data
+
 	// create a user
 	u := data.User{
 		Email:     r.Form.Get("email"),
@@ -156,4 +158,28 @@ func (app *config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 
 	app.session.Put(r.Context(), "flash", "Your account has been activated! Please log in.")
 	http.Redirect(w, r, "/login", http.StatusSeeOther)
+}
+
+func (app *config) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
+}
+
+func (app *config) ChooseSubscription(w http.ResponseWriter, r *http.Request) {
+	if !app.session.Exists(r.Context(), "userID") {
+		app.session.Put(r.Context(), "flash", "You must be logged in to view this page.")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
+	plans, err := app.models.Plan.GetAll()
+	if err != nil {
+		app.errorLog.Println(err)
+		return
+	}
+
+	dataMap := make(map[string]any)
+	dataMap["plans"] = plans
+
+	app.render(w, r, "plans.page.gohtml", &TemplateData{
+		Data: dataMap,
+	})
 }
