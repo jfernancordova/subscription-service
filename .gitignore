@@ -1,3 +1,5 @@
 /db-data/
 /vendor/
 .DS_Store
+/tmp/
+/pdf/
