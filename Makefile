@@ -14,8 +14,14 @@ build:
 	env CGO_ENABLED=0  go build -ldflags="-s -w" -o ${BINARY_NAME} ./cmd/web
 	@echo "Built!"
 
+## mkdir: create directories
+mkdir:
+	@echo "Creating directories..."
+	@mkdir -p ./tmp
+	@echo "Created!"
+
 ## run: builds and runs the application
-run: up build
+run: up build mkdir
 	@echo "Starting..."
 	@env DSN=${DSN} REDIS=${REDIS} ./${BINARY_NAME} &
 	@echo "Started!"

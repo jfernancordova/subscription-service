@@ -72,7 +72,7 @@ func (app *config) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 	app.session.Put(r.Context(), "flash", "Successful login!")
 
 	// redirect the user
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/members/plans", http.StatusSeeOther)
 }
 
 // Logout logs the user out
