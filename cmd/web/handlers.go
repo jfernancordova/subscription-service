@@ -1,6 +1,11 @@
 package main
 
-import "net/http"
+import (
+	"fmt"
+	"html/template"
+	"net/http"
+	"subscription-service/data"
+)
 
 // HomePage displays the home page
 func (app *config) HomePage(w http.ResponseWriter, r *http.Request) {
@@ -81,11 +86,43 @@ func (app *config) RegisterPage(w http.ResponseWriter, r *http.Request) {
 
 // PostRegisterPage handles the register form submission
 func (app *config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		app.errorLog.Println(err)
+	}
+
 	// create a user
+	u := data.User{
+		Email:     r.Form.Get("email"),
+		FirstName: r.Form.Get("first-name"),
+		LastName:  r.Form.Get("last-name"),
+		Password:  r.Form.Get("password"),
+		Active:    0,
+		IsAdmin:   0,
+	}
+
+	_, err = u.Insert(u)
+	if err != nil {
+		app.session.Put(r.Context(), "error", "Failed to create user.")
+		http.Redirect(w, r, "/register", http.StatusSeeOther)
+		return
+	}
 
 	// send an activation email
+	url := fmt.Sprintf("http://localhost/activate?email=%s", u.Email)
+	signedURL := GenerateTokenFromString(url)
+	app.infoLog.Println(signedURL)
 
-	// subscbribe the user to an account
+	msg := Message{
+		To:       u.Email,
+		Subject:  "Activate your account",
+		Template: "confirmation-email",
+		Data:     template.HTML(signedURL),
+	}
+	app.sendEmail(msg)
+	
+	app.session.Put(r.Context(), "flash", "Your account has been created! Please check your email to activate your account.")
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 // ActivateAccount activates a user's account
@@ -97,4 +134,6 @@ func (app *config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 	// send an email with attachments
 
 	// send an email with the invoice attached
+
+	// subscbribe the user to an account
 }
