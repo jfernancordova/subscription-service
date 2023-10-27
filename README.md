@@ -43,13 +43,18 @@ Follow these steps to get the Subscription Service up and running on your local 
 
 4. Access the service locally by opening a web browser and visiting http://localhost.
 
-5. To populate data to the database:
+5. To see the mails trought [mailhog](https://github.com/mailhog/MailHog): http://localhost:8025
+
+6. To populate data to the database:
    ```bash
    make load
 
-6. To access:
+7. To access:
    ```bash
    email: admin@example.com
    password: verysecret
 
-7. To see the mailhog local mails: http://localhost:8025
+8. To restart/stop the subscription service app
+   ```bash
+   make restart
+   make stop
