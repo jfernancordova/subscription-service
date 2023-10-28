@@ -1,5 +1,6 @@
 ## Subscription Service
 
+![Github](https://img.shields.io/github/actions/workflow/status/jfernancordova/subscription-service/go.yml)&nbsp;
 ![Language](https://img.shields.io/badge/language-Go-orange.svg)&nbsp;
 ![Platform](https://img.shields.io/badge/platform-docker-blue.svg)&nbsp;
 ![Database](https://img.shields.io/badge/database-postgreSQL-pink.svg)&nbsp;
