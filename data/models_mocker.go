@@ -10,13 +10,13 @@ import (
 func TestNew(dbPool *sql.DB) Models {
 	db = dbPool
 	return Models{
-		User: &UserTest{},
-		Plan: &PlanTest{},
+		User: &UserMocked{},
+		Plan: &PlanMocked{},
 	}
 }
 
-// UserTest is the type for users
-type UserTest struct {
+// UserMocked is the type for users
+type UserMocked struct {
 	ID        int
 	Email     string
 	FirstName string
@@ -30,7 +30,7 @@ type UserTest struct {
 }
 
 // GetAll returns all users
-func (u *UserTest) GetAll() ([]*User, error) {
+func (u *UserMocked) GetAll() ([]*User, error) {
 	var users []*User
 	user := User{
 		ID:        1,
@@ -48,7 +48,7 @@ func (u *UserTest) GetAll() ([]*User, error) {
 }
 
 // GetByEmail returns one user by email
-func (u *UserTest) GetByEmail(email string) (*User, error) {
+func (u *UserMocked) GetByEmail(email string) (*User, error) {
 	user := User{
 		ID:        1,
 		Email:     "Admin",
@@ -64,42 +64,42 @@ func (u *UserTest) GetByEmail(email string) (*User, error) {
 }
 
 // GetOne returns one user by id
-func (u *UserTest) GetOne(id int) (*User, error) {
+func (u *UserMocked) GetOne(id int) (*User, error) {
 	return u.GetByEmail("")
 }
 
 // Update updates a user
-func (u *UserTest) Update() error {
+func (u *UserMocked) Update(user User) error {
 	return nil
 }
 
 // Delete deletes a user
-func (u *UserTest) Delete() error {
+func (u *UserMocked) Delete() error {
 	return nil
 }
 
 // DeleteByID deletes a user by id
-func (u *UserTest) DeleteByID(id int) error {
+func (u *UserMocked) DeleteByID(id int) error {
 	return nil
 }
 
 // Insert inserts a user
-func (u *UserTest) Insert(user User) (int, error) {
+func (u *UserMocked) Insert(user User) (int, error) {
 	return 2, nil
 }
 
 // ResetPassword resets a user's password
-func (u *UserTest) ResetPassword(password string) error {
+func (u *UserMocked) ResetPassword(password string) error {
 	return nil
 }
 
 // PasswordMatches checks if a user's password matches
-func (u *UserTest) PasswordMatches(plainText string) (bool, error) {
+func (u *UserMocked) PasswordMatches(plainText string) (bool, error) {
 	return true, nil
 }
 
-// PlanTest is the type for plans
-type PlanTest struct {
+// PlanMocked is the type for plans
+type PlanMocked struct {
 	ID                  int
 	PlanName            string
 	PlanAmount          int
@@ -109,7 +109,7 @@ type PlanTest struct {
 }
 
 // GetAll returns all plans
-func (p *PlanTest) GetAll() ([]*Plan, error) {
+func (p *PlanMocked) GetAll() ([]*Plan, error) {
 	var plans []*Plan
 	plan := Plan{
 		ID:         1,
@@ -123,7 +123,7 @@ func (p *PlanTest) GetAll() ([]*Plan, error) {
 }
 
 // GetOne returns one plan by id
-func (p *PlanTest) GetOne(id int) (*Plan, error) {
+func (p *PlanMocked) GetOne(id int) (*Plan, error) {
 	plan := Plan{
 		ID:         1,
 		PlanName:   "Test Plan",
@@ -135,12 +135,12 @@ func (p *PlanTest) GetOne(id int) (*Plan, error) {
 }
 
 // SubscribeUserToPlan subscribes a user to a plan
-func (p *PlanTest) SubscribeUserToPlan(user User, plan Plan) error {
+func (p *PlanMocked) SubscribeUserToPlan(user User, plan Plan) error {
 	return nil
 }
 
 // AmountForDisplay returns the amount for display
-func (p *PlanTest) AmountForDisplay() string {
+func (p *PlanMocked) AmountForDisplay() string {
 	amount := float64(p.PlanAmount) / 100.0
 	return fmt.Sprintf("$%.2f", amount)
 }
