@@ -5,7 +5,7 @@
 ![Database](https://img.shields.io/badge/database-postgreSQL-pink.svg)&nbsp;
 ![Cache](https://img.shields.io/badge/cache-redis-red.svg)&nbsp;
 
-A flexible subscription management system. The idea is providing features such us: sending emails or handling errors using concurrency (channels, waitgroups and goroutines).
+A flexible subscription management system. The idea is providing features such us: sending emails, handling errors and shutdown using concurrency (channels, waitgroups and goroutines).
 
 ### Features
 
@@ -53,7 +53,7 @@ Follow these steps to get the Subscription Service up and running on your local 
    email: admin@example.com
    password: verysecret
 
-8. To restart/stop the subscription service app
+8. To `restart/stop` the subscription service app
    ```bash
    make restart
    make stop
