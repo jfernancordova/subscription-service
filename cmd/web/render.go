@@ -36,10 +36,7 @@ func (app *Config) render(w http.ResponseWriter, r *http.Request, t string, td *
 	var templateSlice []string
 	templateSlice = append(templateSlice, fmt.Sprintf("%s/%s", pathToTemplates, t))
 
-	for _, x := range partials {
-		templateSlice = append(templateSlice, x)
-	}
-
+	templateSlice = append(templateSlice, partials...)
 	if td == nil {
 		td = &TemplateData{}
 	}
