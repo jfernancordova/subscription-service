@@ -28,8 +28,7 @@ Before you begin, ensure you have met the following requirements:
 To check the coverage and run all the tests:
 
    ```bash
-      cd cmd/web
-      go test -v
+      go test -v ./cmd/web
    ```
 
 ### Getting Started
