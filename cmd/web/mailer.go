@@ -40,14 +40,14 @@ type Message struct {
 	Template      string
 }
 
-func (app *config) listenForMail() {
+func (app *Config) listenForMail() {
 	for {
 		select {
-		case msg := <-app.mailer.MailerChan:
-			go app.mailer.sendMail(msg, app.mailer.ErrorChan)
-		case err := <-app.mailer.ErrorChan:
-			app.errorLog.Println(err)
-		case <-app.mailer.DoneChan:
+		case msg := <-app.Mailer.MailerChan:
+			go app.Mailer.sendMail(msg, app.Mailer.ErrorChan)
+		case err := <-app.Mailer.ErrorChan:
+			app.ErrorLog.Println(err)
+		case <-app.Mailer.DoneChan:
 			return
 		}
 	}

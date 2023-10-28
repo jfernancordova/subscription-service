@@ -9,15 +9,15 @@ import (
 	"github.com/alexedwards/scs/v2"
 )
 
-// config holds application configuration
-type config struct {
-	session       *scs.SessionManager
-	db            *sql.DB
-	infoLog       *log.Logger
-	errorLog      *log.Logger
-	wait          *sync.WaitGroup
-	models        data.Models
-	mailer        Mail
-	errorChan     chan error
-	errorChanDone chan bool
+// Config holds application configuration
+type Config struct {
+	Session       *scs.SessionManager
+	DB            *sql.DB
+	InfoLog       *log.Logger
+	ErrorLog      *log.Logger
+	Wait          *sync.WaitGroup
+	Models        data.Models
+	Mailer        Mail
+	ErrorChan     chan error
+	ErrorChanDone chan bool
 }

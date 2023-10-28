@@ -24,7 +24,7 @@ type TemplateData struct {
 	User          *data.User
 }
 
-func (app *config) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
+func (app *Config) render(w http.ResponseWriter, r *http.Request, t string, td *TemplateData) {
 	partials := []string{
 		fmt.Sprintf("%s/base.layout.gohtml", pathToTemplates),
 		fmt.Sprintf("%s/header.partial.gohtml", pathToTemplates),
@@ -46,30 +46,30 @@ func (app *config) render(w http.ResponseWriter, r *http.Request, t string, td *
 
 	tmpl, err := template.ParseFiles(templateSlice...)
 	if err != nil {
-		app.errorLog.Println(err)
+		app.ErrorLog.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := tmpl.Execute(w, app.AddDefaultData(td, r)); err != nil {
-		app.errorLog.Println(err)
+		app.ErrorLog.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 }
 
 // AddDefaultData adds default data to the template data
-func (app *config) AddDefaultData(td *TemplateData, r *http.Request) *TemplateData {
-	td.Flash = app.session.PopString(r.Context(), "flash")
-	td.Warning = app.session.PopString(r.Context(), "warning")
-	td.Error = app.session.PopString(r.Context(), "error")
+func (app *Config) AddDefaultData(td *TemplateData, r *http.Request) *TemplateData {
+	td.Flash = app.Session.PopString(r.Context(), "flash")
+	td.Warning = app.Session.PopString(r.Context(), "warning")
+	td.Error = app.Session.PopString(r.Context(), "error")
 	if app.IsAuthenticated(r) {
 		td.Authenticated = true
-		user, ok := app.session.Get(r.Context(), "user").(data.User)
+		user, ok := app.Session.Get(r.Context(), "user").(data.User)
 		if !ok {
-			app.errorLog.Println("can't get user from session")
+			app.ErrorLog.Println("can't get user from session")
 		} else {
-			app.infoLog.Println("user recovered from session")
+			app.InfoLog.Println("user recovered from session")
 			td.User = &user
 		}
 	}
@@ -79,6 +79,6 @@ func (app *config) AddDefaultData(td *TemplateData, r *http.Request) *TemplateDa
 }
 
 // IsAuthenticated checks if the user is logged in
-func (app *config) IsAuthenticated(r *http.Request) bool {
-	return app.session.Exists(r.Context(), "userID")
+func (app *Config) IsAuthenticated(r *http.Request) bool {
+	return app.Session.Exists(r.Context(), "userID")
 }

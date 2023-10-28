@@ -32,19 +32,19 @@ func main() {
 	wg := sync.WaitGroup{}
 
 	// set up the application config
-	app := config{
-		session:       session,
-		db:            db,
-		infoLog:       infoLog,
-		errorLog:      errorLog,
-		wait:          &wg,
-		models:        data.New(db),
-		errorChan:     make(chan error),
-		errorChanDone: make(chan bool),
+	app := Config{
+		Session:       session,
+		DB:            db,
+		InfoLog:       infoLog,
+		ErrorLog:      errorLog,
+		Wait:          &wg,
+		Models:        data.New(db),
+		ErrorChan:     make(chan error),
+		ErrorChanDone: make(chan bool),
 	}
 
 	// set up mail
-	app.mailer = app.createMail()
+	app.Mailer = app.createMail()
 	go app.listenForMail()
 
 	// listen for signals
@@ -57,32 +57,32 @@ func main() {
 	app.serve()
 }
 
-func (app *config) listenForErrors() {
+func (app *Config) listenForErrors() {
 	for {
 		select {
-		case err := <-app.errorChan:
-			app.errorLog.Println(err)
-		case <-app.errorChanDone:
+		case err := <-app.ErrorChan:
+			app.ErrorLog.Println(err)
+		case <-app.ErrorChanDone:
 			return
 		}
 	}
 }
 
-func (app *config) serve() {
+func (app *Config) serve() {
 	// start http server
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%s", "80"),
 		Handler: app.routes(),
 	}
 
-	app.infoLog.Println("Starting web server...")
+	app.InfoLog.Println("Starting web server...")
 	err := srv.ListenAndServe()
 	if err != nil {
 		log.Panic(err)
 	}
 }
 
-func (app *config) listenForShutdown() {
+func (app *Config) listenForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -90,27 +90,27 @@ func (app *config) listenForShutdown() {
 	os.Exit(0)
 }
 
-func (app *config) shutdown() {
+func (app *Config) shutdown() {
 	// perform any cleanup tasks
-	app.infoLog.Println("would run cleanup tasks...")
+	app.InfoLog.Println("would run cleanup tasks...")
 
 	// block until waitgroup is empty
-	app.wait.Wait()
+	app.Wait.Wait()
 
-	app.mailer.DoneChan <- true
-	app.errorChanDone <- true
+	app.Mailer.DoneChan <- true
+	app.ErrorChanDone <- true
 
-	close(app.mailer.MailerChan)
-	close(app.mailer.ErrorChan)
-	close(app.mailer.DoneChan)
+	close(app.Mailer.MailerChan)
+	close(app.Mailer.ErrorChan)
+	close(app.Mailer.DoneChan)
 
-	close(app.errorChan)
-	close(app.errorChanDone)
+	close(app.ErrorChan)
+	close(app.ErrorChanDone)
 
-	app.infoLog.Println("closing channels and shutting down application...")
+	app.InfoLog.Println("closing channels and shutting down application...")
 }
 
-func (app *config) createMail() Mail {
+func (app *Config) createMail() Mail {
 	errorChan := make(chan error)
 	mailerChan := make(chan Message, 100)
 	mailerDoneChan := make(chan bool)
@@ -122,7 +122,7 @@ func (app *config) createMail() Mail {
 		Encryption:  "none",
 		FromName:    "Subscription Service",
 		FromAddress: "info@jfernancordova.com",
-		Wait:        app.wait,
+		Wait:        app.Wait,
 		ErrorChan:   errorChan,
 		MailerChan:  mailerChan,
 		DoneChan:    mailerDoneChan,
