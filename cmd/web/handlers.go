@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/mail"
 	"strconv"
 	"subscription-service/data"
 	"time"
@@ -11,6 +12,9 @@ import (
 	"github.com/phpdave11/gofpdf"
 	"github.com/phpdave11/gofpdf/contrib/gofpdi"
 )
+
+// URL is the base url for the application
+const URL = "http://localhost"
 
 // HomePage displays the home page
 func (app *config) HomePage(w http.ResponseWriter, r *http.Request) {
@@ -96,11 +100,17 @@ func (app *config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 		app.errorLog.Println(err)
 	}
 
-	// TODO - validate data
+	email := r.Form.Get("email")
+	_, err = mail.ParseAddress(email)
+	if err != nil {
+		app.session.Put(r.Context(), "error", "Invalid email address.")
+		http.Redirect(w, r, "/register", http.StatusSeeOther)
+		return
+	}
 
 	// create a user
 	u := data.User{
-		Email:     r.Form.Get("email"),
+		Email:     email,
 		FirstName: r.Form.Get("first-name"),
 		LastName:  r.Form.Get("last-name"),
 		Password:  r.Form.Get("password"),
@@ -116,7 +126,7 @@ func (app *config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// send an activation email
-	url := fmt.Sprintf("http://localhost/activate?email=%s", u.Email)
+	url := fmt.Sprintf("%s/activate?email=%s", URL, u.Email)
 	signedURL := GenerateTokenFromString(url)
 	app.infoLog.Println(signedURL)
 
@@ -135,10 +145,7 @@ func (app *config) PostRegisterPage(w http.ResponseWriter, r *http.Request) {
 // ActivateAccount activates a user's account
 func (app *config) ActivateAccount(w http.ResponseWriter, r *http.Request) {
 	// validate url
-	url := r.RequestURI
-	testURL := fmt.Sprintf("http://localhost%s", url)
-	okay := VerifyToken(testURL)
-
+	okay := VerifyToken(fmt.Sprintf("%s%s", URL, r.RequestURI))
 	if !okay {
 		app.session.Put(r.Context(), "error", "Invalid activation link.")
 		http.Redirect(w, r, "/", http.StatusSeeOther)

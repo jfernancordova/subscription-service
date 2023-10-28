@@ -5,8 +5,7 @@
 ![Database](https://img.shields.io/badge/database-postgreSQL-pink.svg)&nbsp;
 ![Cache](https://img.shields.io/badge/cache-redis-red.svg)&nbsp;
 
-
-Provides a flexible and scalable subscription management system for your business. Whether you're offering digital content, SaaS products, or any other subscription-based services, this service has got you covered.
+A flexible subscription management system. The idea is providing features such us: sending emails or handling errors using concurrency (channels, waitgroups and goroutines).
 
 ### Features
 
