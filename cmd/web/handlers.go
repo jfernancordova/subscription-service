@@ -75,6 +75,13 @@ func (app *Config) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// check is active
+	if user.Active == 0 {
+		app.Session.Put(r.Context(), "error", "This user is not active, please check your inbox.")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
+
 	// add user to session
 	app.Session.Put(r.Context(), "userID", user.ID)
 	app.Session.Put(r.Context(), "user", user)
