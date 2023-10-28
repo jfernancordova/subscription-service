@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/gob"
 	"log"
 	"net/http"
@@ -13,7 +14,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 )
 
-var testApp Config
+var testConfig Config
 
 // TestMain is the entry point for all tests
 func TestMain(m *testing.M) {
@@ -26,7 +27,7 @@ func TestMain(m *testing.M) {
 	session.Cookie.SameSite = http.SameSiteLaxMode
 	session.Cookie.Secure = true
 
-	testApp = Config{
+	testConfig = Config{
 		Session:       session,
 		DB:            nil,
 		InfoLog:       log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime),
@@ -41,8 +42,8 @@ func TestMain(m *testing.M) {
 	mailerChan := make(chan Message, 100)
 	mailerDoneChan := make(chan bool)
 
-	testApp.Mailer = Mail{
-		Wait:       testApp.Wait,
+	testConfig.Mailer = Mail{
+		Wait:       testConfig.Wait,
 		ErrorChan:  errorChan,
 		MailerChan: mailerChan,
 		DoneChan:   mailerDoneChan,
@@ -50,9 +51,9 @@ func TestMain(m *testing.M) {
 
 	go func() {
 		select {
-		case <-testApp.Mailer.MailerChan:
-		case <-testApp.Mailer.ErrorChan:
-		case <-testApp.Mailer.DoneChan:
+		case <-testConfig.Mailer.MailerChan:
+		case <-testConfig.Mailer.ErrorChan:
+		case <-testConfig.Mailer.DoneChan:
 			return
 		}
 	}()
@@ -60,13 +61,21 @@ func TestMain(m *testing.M) {
 	go func() {
 		for {
 			select {
-			case err := <-testApp.ErrorChan:
-				testApp.ErrorLog.Println(err)
-			case <-testApp.ErrorChanDone:
+			case err := <-testConfig.ErrorChan:
+				testConfig.ErrorLog.Println(err)
+			case <-testConfig.ErrorChanDone:
 				return
 			}
 		}
 	}()
 
 	os.Exit(m.Run())
+}
+
+func ctx(req *http.Request) context.Context {
+	ctx, err := testConfig.Session.Load(req.Context(), req.Header.Get("X-Session"))
+	if err != nil {
+		log.Println(err)
+	}
+	return ctx
 }

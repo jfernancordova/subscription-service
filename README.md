@@ -22,6 +22,16 @@ Before you begin, ensure you have met the following requirements:
 - Go (Golang). You can download it from [here](https://golang.org/dl/).
 - Docker. You can download it from [here](https://docs.docker.com/get-docker/).
 
+
+### Testing
+
+To check the coverage and run all the tests:
+
+   ```bash
+      cd cmd/web
+      go test -v
+   ```
+
 ### Getting Started
 
 Follow these steps to get the Subscription Service up and running on your local machine:

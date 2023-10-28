@@ -17,10 +17,9 @@ var routes = []string{
 	"/members/subscribe",
 }
 
-// cd cmd/web
-// go test -v .
-func Test_Routes_Exist(t *testing.T) {
-	testRoutes := testApp.routes()
+// TestRoutesExist tests that all routes exist
+func TestRoutesExist(t *testing.T) {
+	testRoutes := testConfig.routes()
 	chiRoutes := testRoutes.(chi.Router)
 
 	for _, route := range routes {
