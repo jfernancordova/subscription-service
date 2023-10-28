@@ -16,6 +16,12 @@ import (
 // URL is the base url for the application
 const URL = "http://localhost"
 
+// tmpPath is the path to the tmp directory
+var tmpPath = "./tmp"
+
+// pathToManual is the path to the manual directory
+var pathToManual = "./pdf"
+
 // HomePage displays the home page
 func (app *Config) HomePage(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "home.page.gohtml", nil)
@@ -48,14 +54,14 @@ func (app *Config) PostLoginPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// check password
-	validPassword, err := app.Models.User.PasswordMatches(password)
+	p, err := app.Models.User.PasswordMatches(password)
 	if err != nil {
 		app.Session.Put(r.Context(), "error", "Invalid credentials.")
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 		return
 	}
 
-	if !validPassword {
+	if !p {
 		msg := Message{
 			To:      email,
 			Subject: "Failed log in attempt",
@@ -211,23 +217,23 @@ func (app *Config) SubscribeToPlan(w http.ResponseWriter, r *http.Request) {
 		app.sendEmail(msg)
 	}()
 
+	m := fmt.Sprintf("%s/%d_manual.pdf", tmpPath, user.ID)
+
 	app.Wait.Add(1)
 	go func() {
 		defer app.Wait.Done()
 		pdf := app.Manual(user, plan)
-		err := pdf.OutputFileAndClose(fmt.Sprintf("./tmp/%d_manual.pdf", user.ID))
+		err := pdf.OutputFileAndClose(m)
 		if err != nil {
 			app.ErrorChan <- err
 			return
 		}
 
 		msg := Message{
-			To:      user.Email,
-			Subject: "Your Manual",
-			Data:    "Please find your manual attached.",
-			AttachmentMap: map[string]string{
-				"Manual.pdf": fmt.Sprintf("./tmp/%d_manual.pdf", user.ID),
-			},
+			To:            user.Email,
+			Subject:       "Your Manual",
+			Data:          "Please find your manual attached.",
+			AttachmentMap: map[string]string{"Manual.pdf": m},
 		}
 
 		app.sendEmail(msg)
@@ -263,7 +269,7 @@ func (app *Config) Manual(u data.User, plan *data.Plan) *gofpdf.Fpdf {
 
 	time.Sleep(5 * time.Second)
 
-	t := importer.ImportPage(pdf, "./pdf/manual.pdf", 1, "/MediaBox")
+	t := importer.ImportPage(pdf, fmt.Sprintf("%s/manual.pdf", pathToManual), 1, "/MediaBox")
 	pdf.AddPage()
 
 	importer.UseImportedTemplate(pdf, t, 0, 0, 215.9, 0)

@@ -34,10 +34,10 @@ func (u *UserMocked) GetAll() ([]*User, error) {
 	var users []*User
 	user := User{
 		ID:        1,
-		Email:     "Admin",
+		Email:     "admin@example.com",
 		FirstName: "Admin",
 		LastName:  "Admin",
-		Password:  "Admin",
+		Password:  "verysecret",
 		Active:    1,
 		IsAdmin:   1,
 		CreatedAt: time.Now(),
@@ -51,10 +51,10 @@ func (u *UserMocked) GetAll() ([]*User, error) {
 func (u *UserMocked) GetByEmail(email string) (*User, error) {
 	user := User{
 		ID:        1,
-		Email:     "Admin",
+		Email:     "admin@example.com",
 		FirstName: "Admin",
 		LastName:  "Admin",
-		Password:  "Admin",
+		Password:  "verysecret",
 		Active:    1,
 		IsAdmin:   1,
 		CreatedAt: time.Now(),

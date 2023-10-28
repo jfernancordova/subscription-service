@@ -77,12 +77,10 @@ func TestPages(t *testing.T) {
 // go tool cover -html=coverage.out
 func TestLogin(t *testing.T) {
 	pathToTemplates = "./templates"
-
 	data := url.Values{
 		"email":    {"admin@example.com"},
-		"password": {"abc123dfwpdcmsdi"},
+		"password": {"verysecret"},
 	}
-
 	rr := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/login", strings.NewReader(data.Encode()))
 	ctx := ctx(req)
@@ -96,6 +94,31 @@ func TestLogin(t *testing.T) {
 	}
 
 	if !testConfig.Session.Exists(ctx, "userID") {
-		t.Errorf("Session not created")
+		t.Errorf("Session doesn't exist")
+	}
+}
+
+// go test -race -v .
+func TestSubscribeToPlan(t *testing.T) {
+	rr := httptest.NewRecorder()
+	req, _ := http.NewRequest("GET", "/subscribe?id=1", nil)
+	ctx := ctx(req)
+	req = req.WithContext(ctx)
+
+	testConfig.Session.Put(ctx, "user", data.User{
+		ID:        1,
+		Email:     "admin@example.com",
+		FirstName: "Admin",
+		LastName:  "User",
+		Active:    1,
+	})
+
+	hanlder := http.HandlerFunc(testConfig.SubscribeToPlan)
+	hanlder.ServeHTTP(rr, req)
+
+	testConfig.Wait.Wait()
+
+	if rr.Code != http.StatusSeeOther {
+		t.Errorf("Returned wrong status code: got %v want %v", rr.Code, http.StatusSeeOther)
 	}
 }

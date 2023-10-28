@@ -78,66 +78,65 @@ func (u *User) GetAll() ([]*User, error) {
 
 // GetByEmail returns one user by email
 func (u *User) GetByEmail(email string) (*User, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
-	defer cancel()
-
-	query := `
-			select 
-			    id, 
-			    email, 
-			    first_name, 
-			    last_name, 
-			    password, 
-			    user_active, 
-			    is_admin, 
-			    created_at, 
-			    updated_at 
-			from 
-			    users 
-			where 
-			    email = $1`
-
-	var user User
-	row := db.QueryRowContext(ctx, query, email)
-
-	err := row.Scan(
-		&user.ID,
-		&user.Email,
-		&user.FirstName,
-		&user.LastName,
-		&user.Password,
-		&user.Active,
-		&user.IsAdmin,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-	)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// get plan, if any
-	query = `select p.id, p.plan_name, p.plan_amount, p.created_at, p.updated_at from 
-			plans p
-			left join user_plans up on (p.id = up.plan_id)
-			where up.user_id = $1`
-
-	var plan Plan
-	row = db.QueryRowContext(ctx, query, user.ID)
-
-	err = row.Scan(
-		&plan.ID,
-		&plan.PlanName,
-		&plan.PlanAmount,
-		&plan.CreatedAt,
-		&plan.UpdatedAt,
-	)
-
-	if err == nil {
-		user.Plan = &plan
-	}
-
-	return &user, nil
+    ctx, cancel := context.WithTimeout(context.Background(), dbTimeout)
+    defer cancel()
+ 
+    query := `
+            select 
+                id, 
+                email, 
+                first_name, 
+                last_name, 
+                password, 
+                user_active, 
+                is_admin, 
+                created_at, 
+                updated_at 
+            from 
+                users 
+            where 
+                email = $1`
+ 
+    row := db.QueryRowContext(ctx, query, email)
+ 
+    err := row.Scan(
+        &u.ID,
+        &u.Email,
+        &u.FirstName,
+        &u.LastName,
+        &u.Password,
+        &u.Active,
+        &u.IsAdmin,
+        &u.CreatedAt,
+        &u.UpdatedAt,
+    )
+ 
+    if err != nil {
+        return nil, err
+    }
+ 
+    // get plan, if any
+    query = `select p.id, p.plan_name, p.plan_amount, p.created_at, p.updated_at from 
+            plans p
+            left join user_plans up on (p.id = up.plan_id)
+            where up.user_id = $1`
+ 
+    var plan Plan
+    row = db.QueryRowContext(ctx, query, u.ID)
+ 
+    err = row.Scan(
+        &plan.ID,
+        &plan.PlanName,
+        &plan.PlanAmount,
+        &plan.CreatedAt,
+        &plan.UpdatedAt,
+    )
+ 
+    if err == nil {
+        u.Plan = &plan
+    }
+ 
+    return u, nil
 }
 
 // GetOne returns one user by id
