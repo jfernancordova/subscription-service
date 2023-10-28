@@ -52,7 +52,7 @@ Follow these steps to get the Subscription Service up and running on your local 
 
 4. Access the service locally by opening a web browser and visiting http://localhost.
 
-5. To see the mails trought [mailhog](https://github.com/mailhog/MailHog): http://localhost:8025
+5. To see the mails through [mailhog](https://github.com/mailhog/MailHog): http://localhost:8025
 
 6. To populate data to the database:
    ```bash
