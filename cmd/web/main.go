@@ -19,10 +19,10 @@ import (
 
 func main() {
 	// connect to the database
-	db := database.Init()
+	db := database.Create()
 
 	// create sessions
-	session := session.Init()
+	session := session.Create()
 
 	// create loggers
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)

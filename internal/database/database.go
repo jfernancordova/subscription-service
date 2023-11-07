@@ -7,8 +7,8 @@ import (
 	"time"
 )
 
-// Init connects to postgres, and backs off until a connection
-func Init() *sql.DB {
+// Create connects to postgres, and backs off until a connection
+func Create() *sql.DB {
 	conn := connect()
 	if conn == nil {
 		log.Panic("can't connect to database")

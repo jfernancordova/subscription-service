@@ -12,8 +12,8 @@ import (
 	"github.com/gomodule/redigo/redis"
 )
 
-// Init sets up a session, using Redis for session store
-func Init() *scs.SessionManager {
+// Create sets up a session, using Redis for session store
+func Create() *scs.SessionManager {
 	gob.Register(data.User{})
 
 	// set up session
